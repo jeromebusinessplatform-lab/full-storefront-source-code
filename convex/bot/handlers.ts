@@ -24,10 +24,8 @@ function formatPrice(amount: number): string {
 // This entry point is invoked by your HTTP webhook handler when Telegram sends an update
 export const handleWebhookUpdate = action({
   args: { payload: v.string() },
-  handler: async (ctx, args) => {  args: {},
   handler: async (ctx, args) => {
-    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-    if (!BOT_TOKEN) throw new Error("Missing TELEGRAM_BOT_TOKEN environment variable.");
+    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;    if (!BOT_TOKEN) throw new Error("Missing TELEGRAM_BOT_TOKEN environment variable.");
 
     // Initialize grammY in web-compatible mode inside the serverless execution context
     const bot = new Bot(BOT_TOKEN);
