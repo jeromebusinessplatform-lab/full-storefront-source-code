@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { action, mutation, query } from "./_generated/server";
 import { api } from "./_generated/api";
-import { HMAC } from "node:crypto";
+import { Hmac } from "node:crypto";
 
 // Helper to generate 10-char ID
 function generateInternalId() {
