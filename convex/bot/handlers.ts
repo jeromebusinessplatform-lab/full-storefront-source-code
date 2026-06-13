@@ -23,7 +23,8 @@ function formatPrice(amount: number): string {
 // ─── CENTRALIZED CONVEX ACTION ROUTER ─────────────────────────────────────────
 // This entry point is invoked by your HTTP webhook handler when Telegram sends an update
 export const handleWebhookUpdate = action({
-  args: {},
+  args: { payload: v.string() },
+  handler: async (ctx, args) => {  args: {},
   handler: async (ctx, args) => {
     const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     if (!BOT_TOKEN) throw new Error("Missing TELEGRAM_BOT_TOKEN environment variable.");
@@ -56,13 +57,27 @@ export const handleWebhookUpdate = action({
         const username = tgCtx.from?.username ? `@${tgCtx.from.username}` : "there";
         
         const mainMenuKeyboard = new InlineKeyboard()
-          .text(pad2("BROWSE PRODUCTS"), "action:browse")
-          .text(pad2("MY CART"), "action:cart").row()
+          .webApp("🚀 OPEN SHOP", process.env.NEXT_PUBLIC_APP_URL || "")
+          .row()
           .text(pad2("MY ORDERS"), "action:my_orders")
           .text(pad2("HELP CENTER"), "action:help");
 
-        await tgCtx.editMessageText(`Hello, ${username}!\n\nWelcome to our store. What would you like to do?`, {
+        await tgCtx.editMessageText(`Hello, ${username}!\n\nWelcome to our store. Tap the button below to start shopping!`, {
           reply_markup: mainMenuKeyboard,
+          parse_mode: "Markdown",
+        });
+      });
+
+      // Handle /start command
+      bot.command("start", async (tgCtx) => {
+        const username = tgCtx.from?.username ? `@${tgCtx.from.username}` : "there";
+        const startKeyboard = new InlineKeyboard()
+          .webApp("🚀 OPEN SHOP", process.env.NEXT_PUBLIC_APP_URL || "")
+          .row()
+          .text(pad2("MAIN MENU"), "action:main_menu");
+
+        await tgCtx.reply(`Hello, ${username}!\n\nWelcome to the Minimalist Store. Tap below to browse our collection!`, {
+          reply_markup: startKeyboard,
           parse_mode: "Markdown",
         });
       });
@@ -73,7 +88,6 @@ export const handleWebhookUpdate = action({
         
         // Fetch real-time user cart data from your Convex tables
         const userId = tgCtx.from.id.toString();
-        const cartItems = await ctx.runQuery(api.cart.getUserCart, { userId }) || [];
 
         if (cartItems.length === 0) {
           const emptyKeyboard = new InlineKeyboard().text(pad1("BACK TO MENU"), "action:main_menu");
@@ -81,15 +95,15 @@ export const handleWebhookUpdate = action({
           return;
         }
 
-        const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
-        const hazardFee = isHazardHour() ? fees.hazard : 0;
+const subtotal = cartItems.reduce((sum: number, item: any) => sum + item.price * item.qty, 0);              const hazardFee = isHazardHour() ? fees.hazard : 0;
         const grandTotal = subtotal + fees.discreet + fees.admin + hazardFee;
 
         const cartLines = [
           "*YOUR CART*",
           "",
-          ...cartItems.map(i => `• ${i.name.toUpperCase()} x${i.qty} — ${formatPrice(i.price * i.qty)}`),
+          ...cartItems.map(i => `• ${i.name. oUpperCase()} x${i.qty} — ${formatPrice(i.price * i.qty)}`),
           "",
+          ...cartItems.map((i: any) => `${i.name.toUpperCase()} x${i.qty} - ${formatPrice(i.price * i.qty)}`),
           `Subtotal: ${formatPrice(subtotal)}`,
           `Discreet Packaging: ${formatPrice(fees.discreet)}`,
           `System Admin Fee: ${formatPrice(fees.admin)}`,
