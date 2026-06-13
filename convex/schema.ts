@@ -59,6 +59,7 @@ export default defineSchema({
       distance: v.float64(),
     }),
     deliveryFee: v.float64(),
+    trackingUrl: v.optional(v.string()),
     createdAt: v.float64(),
   }).index("by_telegramId", ["telegramId"]),
 

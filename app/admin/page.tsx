@@ -8,6 +8,16 @@ export default function AdminPage() {
   const [accessCode, setAccessCode] = useState("");
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [activeTab, setActiveTab] = useState("orders");
+  const [trackingPrompt, setTrackingPrompt] = useState<{ id: any, open: boolean }>({ id: null, open: false });
+  const [trackingUrl, setTrackingUrl] = useState("");
+
+  const storeStatus = useQuery(api.settings.getByKey, { key: "storeStatus" }) || "OPEN";
+  const botUiConfig = useQuery(api.settings.getByKey, { key: "bot_ui_config" }) || {
+    homeTitle: "CORE // SYSTEM INTERFACE",
+    homeCaption: "STATUS: OPERATIONAL",
+    homeType: "TEXT"
+  };
+  const setSetting = useMutation(api.settings.setByKey);
 
   // Auth Gate
   const handleAuth = (e: React.FormEvent) => {
@@ -52,7 +62,15 @@ export default function AdminPage() {
     <div className="min-h-screen bg-white">
       {/* Admin Header */}
       <header className="header flex items-center justify-between px-6">
-        <h1 className="text-lg">OPERATIONS CONSOLE</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-lg">OPERATIONS CONSOLE</h1>
+          <button 
+            onClick={() => setSetting({ key: "storeStatus", value: storeStatus === "OPEN" ? "CLOSED" : "OPEN", adminCode: accessCode })}
+            className={`text-[10px] px-2 py-1 rounded font-bold ${storeStatus === 'OPEN' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+          >
+            STORE: {storeStatus}
+          </button>
+        </div>
         <button 
           onClick={() => {
             localStorage.removeItem("adminCode");
@@ -67,11 +85,11 @@ export default function AdminPage() {
       <div className="content mt-16 pb-20 px-4">
         {/* Tabs */}
         <div className="flex border-b border-accent mb-6 overflow-x-auto no-scrollbar">
-          {["orders", "payments", "logistics", "products"].map((tab) => (
+          {["orders", "payments", "logistics", "products", "bot ui"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 font-primary-heading text-sm uppercase ${
+              className={`px-4 py-2 font-primary-heading text-sm uppercase whitespace-nowrap ${
                 activeTab === tab ? "border-b-2 border-black" : "text-text-secondary"
               }`}
             >
@@ -80,25 +98,65 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {activeTab === "orders" && <OrderManagement adminCode={accessCode} />}
+        {activeTab === "orders" && <OrderManagement adminCode={accessCode} setTrackingPrompt={setTrackingPrompt} />}
         {activeTab === "payments" && <PaymentSettings adminCode={accessCode} />}
         {activeTab === "logistics" && <LogisticsSettings adminCode={accessCode} />}
         {activeTab === "products" && <ProductManagement adminCode={accessCode} />}
+        {activeTab === "bot ui" && <BotUiSettings adminCode={accessCode} config={botUiConfig} />}
       </div>
+
+      {/* Tracking Prompt Modal */}
+      {trackingPrompt.open && (
+        <div className="fixed inset-0 z-[3000] bg-black/50 flex items-center justify-center p-6">
+          <div className="bg-white w-full max-w-sm p-6 rounded-xl shadow-2xl">
+            <h2 className="font-primary-heading text-sm mb-4">ENTER TRACKING LINK</h2>
+            <input 
+              type="text" 
+              placeholder="HTTPS://TRACKING.URL/..." 
+              className="w-full p-3 border border-accent rounded text-xs mb-4 outline-none bg-secondary"
+              value={trackingUrl}
+              onChange={(e) => setTrackingUrl(e.target.value)}
+            />
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setTrackingPrompt({ id: null, open: false })}
+                className="flex-1 p-3 text-xs font-primary-heading border border-accent rounded"
+              >
+                CANCEL
+              </button>
+              <button 
+                onClick={async () => {
+                  if (!trackingUrl) return alert("REQUIRED");
+                  await setSetting({ key: `order_tracking_${trackingPrompt.id}`, value: trackingUrl, adminCode: accessCode });
+                  setTrackingPrompt({ id: null, open: false });
+                  setTrackingUrl("");
+                }}
+                className="flex-1 p-3 text-xs font-primary-heading bg-black text-white rounded"
+              >
+                DISPATCH
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Admin Bottom Nav */}
       <nav className="bottom-nav">
-         <span className="font-primary-heading text-xs text-text-secondary">SYSTEM STATUS: OPERATIONAL</span>
+         <span className="font-primary-heading text-xs text-text-secondary uppercase">System Operational // Cluster Manila</span>
       </nav>
     </div>
   );
 }
 
-function OrderManagement({ adminCode }: { adminCode: string }) {
+function OrderManagement({ adminCode, setTrackingPrompt }: { adminCode: string, setTrackingPrompt: any }) {
   const orders = useQuery(api.orders.listAll, { adminCode });
   const updateStatus = useMutation(api.orders.updateStatus);
 
   const handleStatusChange = async (orderId: any, newStatus: string) => {
+    if (newStatus === "DISPATCHED") {
+      setTrackingPrompt({ id: orderId, open: true });
+      return;
+    }
     try {
       await updateStatus({ orderId, status: newStatus, adminCode });
     } catch (err) {
@@ -162,10 +220,6 @@ function PaymentSettings({ adminCode }: { adminCode: string }) {
   const paymentMethods = useQuery(api.settings.getByKey, { key: "paymentMethods" });
   const setSetting = useMutation(api.settings.setByKey);
 
-  const handleUpdate = async (newMethods: any) => {
-    await setSetting({ key: "paymentMethods", value: newMethods, adminCode });
-  };
-
   return (
     <div className="space-y-4">
       <h2 className="font-primary-heading text-sm">GATEWAY CONFIGURATION</h2>
@@ -215,6 +269,51 @@ function ProductManagement({ adminCode }: { adminCode: string }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function BotUiSettings({ adminCode, config }: { adminCode: string, config: any }) {
+  const setSetting = useMutation(api.settings.setByKey);
+  const [localConfig, setLocalConfig] = useState(config);
+
+  const save = async () => {
+    await setSetting({ key: "bot_ui_config", value: localConfig, adminCode });
+    alert("CONFIG SAVED");
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="p-4 border border-accent rounded-lg bg-secondary">
+        <h3 className="font-primary-heading text-xs mb-4">HOME SCREEN</h3>
+        <label className="text-[10px] text-text-secondary block mb-1">TITLE</label>
+        <input 
+          className="w-full p-2 border border-accent rounded text-xs mb-3"
+          value={localConfig.homeTitle}
+          onChange={(e) => setLocalConfig({...localConfig, homeTitle: e.target.value})}
+        />
+        <label className="text-[10px] text-text-secondary block mb-1">CAPTION</label>
+        <textarea 
+          className="w-full p-2 border border-accent rounded text-xs h-24 mb-3"
+          value={localConfig.homeCaption}
+          onChange={(e) => setLocalConfig({...localConfig, homeCaption: e.target.value})}
+        />
+        <label className="text-[10px] text-text-secondary block mb-1">CONTENT TYPE</label>
+        <select 
+          className="w-full p-2 border border-accent rounded text-xs"
+          value={localConfig.homeType}
+          onChange={(e) => setLocalConfig({...localConfig, homeType: e.target.value})}
+        >
+          <option value="TEXT">TEXT ONLY</option>
+          <option value="PHOTO">PHOTO + CAPTION</option>
+        </select>
+      </div>
+      <button 
+        onClick={save}
+        className="w-full bg-black text-white p-4 font-primary-heading text-sm rounded-xl"
+      >
+        LOCK CONFIGURATION
+      </button>
     </div>
   );
 }
