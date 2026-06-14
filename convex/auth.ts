@@ -29,7 +29,7 @@ export const syncUser = mutation({
     username: v.optional(v.string()),
     ipAddress: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args: any) => {
     const existingUser = await ctx.db
       .query("users")
       .withIndex("by_telegramId", (q) => q.eq("telegramId", args.telegramId))
@@ -66,7 +66,7 @@ export const syncUser = mutation({
   },
 });
 
-export const validateAndAuth = action({
+  export const validateAndAuth = action({
   args: {
     initData: v.string(),
     ipAddress: v.optional(v.string()),

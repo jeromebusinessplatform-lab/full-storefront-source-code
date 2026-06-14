@@ -22,7 +22,7 @@ export const calculateDeliveryFee = action({
     if (args.address.toLowerCase().includes("makati")) distance = 3.0 + Math.random() * 2.0;
 
     // 3. Get Provider Rates
-    const providers = await ctx.runQuery(api.settings.getByKey, { key: "deliveryProviders" });
+    const providers: any = await ctx.runQuery(api.settings.getByKey, { key: "deliveryProviders" });
     const provider = providers?.find((p: any) => p.name === args.providerName) || { baseRate: 50, perKmRate: 10 };
 
     const deliveryFee = provider.baseRate + (distance * provider.perKmRate);
