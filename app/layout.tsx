@@ -28,6 +28,9 @@ export default function RootLayout({
           src="https://telegram.org/js/telegram-web-app.js"
           strategy="beforeInteractive"
         />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#000000" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body className={`${inter.variable} ${robotoCondensed.variable}`}>
         <ConvexClientProvider>

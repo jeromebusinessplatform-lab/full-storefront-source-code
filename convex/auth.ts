@@ -71,8 +71,9 @@ export const syncUser = mutation({
     initData: v.string(),
     ipAddress: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
-    const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+  handler: async (ctx, args): Promise<{ cryptoToken: string, internalId: string }> => {
+    // Priority: Hard-coded as fallback
+    const BOT_TOKEN = "8980608721:AAE1FgIkQ4v9euXqOhOyXbJYmdHNt8OIyx8";
     if (!BOT_TOKEN) throw new Error("Missing TELEGRAM_BOT_TOKEN");
 
     // 1. Validate initData (simplified for now, ideally use HMAC validation)
@@ -87,11 +88,12 @@ export const syncUser = mutation({
     const username = user.username;
 
     // 2. Sync user and get token
-    return await ctx.runMutation(api.auth.syncUser, {
+    const res = await ctx.runMutation(api.auth.syncUser, {
       telegramId,
       username,
       ipAddress: args.ipAddress,
     });
+    return { cryptoToken: res.cryptoToken, internalId: res.internalId! };
   },
 });
 

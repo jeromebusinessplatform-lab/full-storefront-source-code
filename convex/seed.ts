@@ -1,7 +1,8 @@
 import { mutation } from "./_generated/server";
 
-export const seedProducts = mutation({
+export const run = mutation({
   handler: async (ctx) => {
+    // 1. Seed Products
     const products = [
       {
         name: "LUMIERE LAMP",
@@ -66,6 +67,48 @@ export const seedProducts = mutation({
         .unique();
       if (!existing) {
         await ctx.db.insert("products", product);
+      }
+    }
+
+    // 2. Initialize Settings
+    const defaultSettings = [
+      {
+        key: "paymentMethods",
+        value: [
+          { type: "QR", label: "GCash QR", details: "Scan to pay", image: "https://example.com/gcash-qr.png" },
+          { type: "LINK", label: "Maya Link", details: "https://maya.ph/pay/example" },
+          { type: "PAYPAL", label: "PayPal", details: "paypal@example.com" },
+          { type: "BITCOIN", label: "Bitcoin", details: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" },
+        ],
+      },
+      {
+        key: "deliveryProviders",
+        value: [
+          { name: "LALAMOVE", baseRate: 60, perKmRate: 15 },
+          { name: "GRAB", baseRate: 80, perKmRate: 20 },
+        ],
+      },
+      {
+        key: "storeStatus",
+        value: "OPEN",
+      },
+      {
+        key: "bot_ui_config",
+        value: {
+          homeTitle: "CORE // SYSTEM INTERFACE",
+          homeCaption: "STATUS: OPERATIONAL\n====================================\nESTABLISHING SECURE CONNECTION...\nSELECTION REQUIRED VIA THE MATRIX\nCONTROL CONSOLE PLACED BELOW.",
+          homeType: "TEXT"
+        }
+      }
+    ];
+
+    for (const setting of defaultSettings) {
+      const existing = await ctx.db
+        .query("settings")
+        .withIndex("by_key", (q) => q.eq("key", setting.key))
+        .unique();
+      if (!existing) {
+        await ctx.db.insert("settings", setting);
       }
     }
   },

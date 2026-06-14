@@ -1,1 +1,16 @@
-{"projectId":"prj_zDHHgHlK5mKxKzCfhGwyJpZ3AyiO","orgId":"team_C2XvCdAirHDNE44xaxOOZMlV","projectName":"full-storefront-source-code"}
+{
+  "projectId": "prj_rRqRVbx9J04PiavFEflR5Hy2FnJ9",
+  "orgId": "team_C2XvCdAirHDNE44xaxOOZMlV",
+  "projectName": "theprimemarketrplace",
+  "settings": {
+    "createdAt": 1781429611374,
+    "framework": "nextjs",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}
