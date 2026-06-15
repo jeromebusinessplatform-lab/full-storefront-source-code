@@ -2,12 +2,10 @@ import { action } from "../_generated/server";
 import { api } from "../_generated/api";
 import { v } from "convex/values";
 
-const BOT_TOKEN = "8980608721:AAE1FgIkQ4v9euXqOhOyXbJYmdHNt8OIyx8";
-
 // ─── RAW TELEGRAM API WRAPPERS ────────────────────────────────────────────────
 
-async function tg(method: string, body: any) {
-  const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
+async function tg(token: string, method: string, body: any) {
+  const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -39,7 +37,7 @@ function createMatrixButtons(options: { label: string, data: string }[], nav: { 
   inline_keyboard.push([
     { text: pad("<<"), callback_data: nav.prev },
     { text: pad("MAIN MENU"), callback_data: "action:main_menu" },
-    { text: pad("NEXT"), callback_data: nav.next }
+    { text: pad(">>"), callback_data: nav.next }
   ]);
   return { inline_keyboard };
 }
@@ -51,6 +49,7 @@ export const handleWebhookUpdate = action({
   handler: async (ctx, args) => {
     const update = JSON.parse(args.payload);
     const responses: any = await ctx.runQuery(api.settings.getByKey, { key: "bot_responses" }) || {};
+    const BOT_TOKEN = await ctx.runQuery(api.settings.getByKey, { key: "TELEGRAM_BOT_TOKEN" }) || "8980608721:AAE1FgIkQ4v9euXqOhOyXbJYmdHNt8OIyx8";
     
     const chatId = update.message?.chat?.id || update.callback_query?.message?.chat?.id;
     const messageId = update.callback_query?.message?.message_id;
@@ -65,14 +64,14 @@ export const handleWebhookUpdate = action({
       const baseBody = { chat_id: chatId, reply_markup: kb, parse_mode: "HTML" };
       
       if (config.type === "PHOTO" && config.image) {
-        if (isEdit) await tg("deleteMessage", { chat_id: chatId, message_id: messageId });
-        return await tg("sendPhoto", { ...baseBody, photo: config.image, caption: config.text || defaultText });
+        if (isEdit) await tg(BOT_TOKEN, "deleteMessage", { chat_id: chatId, message_id: messageId });
+        return await tg(BOT_TOKEN, "sendPhoto", { ...baseBody, photo: config.image, caption: config.text || defaultText });
       }
       
       if (isEdit) {
-        return await tg("editMessageText", { ...baseBody, message_id: messageId, text: config.text || defaultText });
+        return await tg(BOT_TOKEN, "editMessageText", { ...baseBody, message_id: messageId, text: config.text || defaultText });
       } else {
-        return await tg("sendMessage", { ...baseBody, text: config.text || defaultText });
+        return await tg(BOT_TOKEN, "sendMessage", { ...baseBody, text: config.text || defaultText });
       }
     };
 
@@ -121,10 +120,10 @@ export const handleWebhookUpdate = action({
       
       // Override with image if product has one
       if (product.image) {
-        await tg("deleteMessage", { chat_id: chatId, message_id: messageId });
-        await tg("sendPhoto", { chat_id: chatId, photo: product.image, caption: detailText, parse_mode: "HTML", reply_markup: kb });
+        await tg(BOT_TOKEN, "deleteMessage", { chat_id: chatId, message_id: messageId });
+        await tg(BOT_TOKEN, "sendPhoto", { chat_id: chatId, photo: product.image, caption: detailText, parse_mode: "HTML", reply_markup: kb });
       } else {
-        await tg("editMessageText", { chat_id: chatId, message_id: messageId, text: detailText, parse_mode: "HTML", reply_markup: kb });
+        await tg(BOT_TOKEN, "editMessageText", { chat_id: chatId, message_id: messageId, text: detailText, parse_mode: "HTML", reply_markup: kb });
       }
     }
 
@@ -136,7 +135,7 @@ export const handleWebhookUpdate = action({
     }
 
     // 5. NOOP / ACK
-    if (data === "noop") await tg("answerCallbackQuery", { callback_query_id: update.callback_query.id });
+    if (data === "noop") await tg(BOT_TOKEN, "answerCallbackQuery", { callback_query_id: update.callback_query.id });
   },
 });
 
@@ -144,8 +143,9 @@ export const setWebhook = action({
   args: { adminCode: v.string() },
   handler: async (ctx, args) => {
     if (args.adminCode !== "COREDEVELOPER9491") throw new Error("Unauthorized");
+    const BOT_TOKEN = await ctx.runQuery(api.settings.getByKey, { key: "TELEGRAM_BOT_TOKEN" }) || "8980608721:AAE1FgIkQ4v9euXqOhOyXbJYmdHNt8OIyx8";
     const convexSiteUrl = process.env.CONVEX_SITE_URL || `https://${process.env.CONVEX_DEPLOYMENT?.split(":")[1]}.convex.site`;
-    const res = await tg("setWebhook", { url: `${convexSiteUrl}/telegram` });
+    const res = await tg(BOT_TOKEN, "setWebhook", { url: `${convexSiteUrl}/telegram` });
     return { success: res.ok, url: `${convexSiteUrl}/telegram` };
   },
 });
@@ -154,7 +154,8 @@ export const getBotInfo = action({
   args: { adminCode: v.string() },
   handler: async (ctx, args) => {
     if (args.adminCode !== "COREDEVELOPER9491") throw new Error("Unauthorized");
-    const res = await tg("getMe", {});
+    const BOT_TOKEN = await ctx.runQuery(api.settings.getByKey, { key: "TELEGRAM_BOT_TOKEN" }) || "8980608721:AAE1FgIkQ4v9euXqOhOyXbJYmdHNt8OIyx8";
+    const res = await tg(BOT_TOKEN, "getMe", {});
     return res.ok ? { success: true, username: res.result.username } : { success: false, error: res.description };
   },
 });

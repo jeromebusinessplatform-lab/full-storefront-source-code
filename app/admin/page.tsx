@@ -416,14 +416,28 @@ function BotUiSettings({ adminCode }: { adminCode: string }) {
 function SystemSettings({ adminCode }: { adminCode: string }) {
   const setWebhook = useAction(api.bot.handlers.setWebhook);
   const getBotInfo = useAction(api.bot.handlers.getBotInfo);
+  const token = useQuery(api.settings.getByKey, { key: "TELEGRAM_BOT_TOKEN" }) || "";
+  const setSetting = useMutation(api.settings.setByKey);
   const [botUser, setBotUser] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [localToken, setLocalToken] = useState("");
+
+  useEffect(() => {
+    if (token) setLocalToken(token);
+  }, [token]);
+
+  const saveToken = () => {
+    setSetting({ key: "TELEGRAM_BOT_TOKEN", value: localToken, adminCode })
+      .then(() => alert("TOKEN LOCKED"))
+      .catch(() => alert("PERSISTENCE FAILURE"));
+  };
 
   const check = async () => {
     setLoading(true);
     try {
       const res = await getBotInfo({ adminCode });
       if (res.success) setBotUser(res.username!);
+      else alert(`ERROR: ${res.error}`);
     } finally {
       setLoading(false);
     }
@@ -443,6 +457,17 @@ function SystemSettings({ adminCode }: { adminCode: string }) {
 
   return (
     <div className="space-y-6">
+      <div className="p-6 border border-accent rounded-[2rem] bg-white space-y-4">
+         <h4 className="text-[9px] font-primary-heading tracking-widest uppercase opacity-40">Bot Configuration</h4>
+         <input 
+           className="w-full p-4 bg-secondary border border-accent rounded-2xl text-[10px] font-mono" 
+           placeholder="TELEGRAM_BOT_TOKEN" 
+           value={localToken} 
+           onChange={e => setLocalToken(e.target.value)} 
+         />
+         <button onClick={saveToken} className="w-full p-4 bg-black text-white rounded-2xl text-[9px] font-primary-heading tracking-widest active:scale-95 transition-all">SAVE BOT TOKEN</button>
+      </div>
+
       <div className="p-8 border border-accent rounded-[3rem] bg-secondary flex flex-col items-center text-center shadow-inner">
         <div className={`p-6 rounded-full mb-6 transition-all duration-700 ${botUser ? 'bg-green-50 text-green-500 scale-110' : 'bg-white text-black'}`}>
            <Globe size={40} className={loading ? 'animate-spin' : ''} />

@@ -30,6 +30,7 @@ export const add = mutation({
     price: v.float64(),
     image: v.string(),
     stock: v.float64(),
+    status: v.string(),
     category: v.string(),
     adminCode: v.string(),
   },
