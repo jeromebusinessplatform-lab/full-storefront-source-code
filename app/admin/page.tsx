@@ -72,14 +72,14 @@ export default function AdminPage() {
 
   if (!activeTab) {
     return (
-      <div className="min-h-screen bg-white p-8 flex flex-col items-center justify-center max-w-md mx-auto">
+      <div className="min-h-screen bg-white p-8 flex flex-col items-center justify-center max-w-2xl mx-auto">
         <header className="mb-12 text-center animate-in fade-in duration-700">
           <h1 className="text-3xl font-primary-heading mb-2 tracking-tight">OPERATIONS</h1>
           <div className="h-[2px] w-12 bg-black mx-auto mb-4"></div>
           <p className="text-[9px] text-text-secondary font-sub-heading tracking-[0.3em] uppercase">Cluster Manila // Node 01</p>
         </header>
 
-        <div className="grid grid-cols-2 gap-5 w-full">
+        <div className="grid grid-cols-3 gap-5 w-full max-w-lg">
           <Tile icon={<ShoppingBag size={20}/>} label="ORDERS" onClick={() => setActiveTab("orders")} />
           <Tile icon={<Package size={20}/>} label="PRODUCTS" onClick={() => setActiveTab("products")} />
           <Tile icon={<Truck size={20}/>} label="LOGISTICS" onClick={() => setActiveTab("logistics")} />
