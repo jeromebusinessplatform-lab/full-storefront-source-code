@@ -72,31 +72,37 @@ export default function AdminPage() {
 
   if (!activeTab) {
     return (
-      <div className="min-h-screen bg-white p-8 flex flex-col items-center justify-center max-w-2xl mx-auto">
-        <header className="mb-12 text-center animate-in fade-in duration-700">
-          <h1 className="text-3xl font-primary-heading mb-2 tracking-tight">OPERATIONS</h1>
-          <div className="h-[2px] w-12 bg-black mx-auto mb-4"></div>
-          <p className="text-[9px] text-text-secondary font-sub-heading tracking-[0.3em] uppercase">Cluster Manila // Node 01</p>
+      <div className="min-h-screen bg-white flex flex-col font-sub-heading">
+        {/* Fixed Header */}
+        <header className="fixed top-0 left-0 right-0 h-16 flex items-center justify-between px-6 z-[1000] bg-white">
+          <h1 className="text-xl font-primary-heading tracking-tight">CORE CENTRAL OPERATIONS</h1>
+          <button 
+            onClick={() => {
+              localStorage.removeItem("adminCode");
+              setIsAuthorized(false);
+            }}
+            className="p-3 text-black hover:opacity-70 transition-opacity"
+          >
+            <LogOut size={20} />
+          </button>
         </header>
 
-        <div className="grid grid-cols-3 gap-5 w-full max-w-lg">
-          <Tile icon={<ShoppingBag size={20}/>} label="ORDERS" onClick={() => setActiveTab("orders")} />
-          <Tile icon={<Package size={20}/>} label="PRODUCTS" onClick={() => setActiveTab("products")} />
-          <Tile icon={<Truck size={20}/>} label="LOGISTICS" onClick={() => setActiveTab("logistics")} />
-          <Tile icon={<CreditCard size={20}/>} label="PAYMENTS" onClick={() => setActiveTab("payments")} />
-          <Tile icon={<Layout size={20}/>} label="BOT UI" onClick={() => setActiveTab("bot ui")} />
-          <Tile icon={<Globe size={20}/>} label="SYSTEM" onClick={() => setActiveTab("system")} />
-        </div>
+        {/* Centered Content */}
+        <main className="flex-1 flex flex-col items-center justify-center p-8">
+          <div className="grid grid-cols-3 gap-5 w-full max-w-lg">
+            <Tile icon={<ShoppingBag size={20}/>} label="ORDERS" onClick={() => setActiveTab("orders")} />
+            <Tile icon={<Package size={20}/>} label="PRODUCTS" onClick={() => setActiveTab("products")} />
+            <Tile icon={<Truck size={20}/>} label="LOGISTICS" onClick={() => setActiveTab("logistics")} />
+            <Tile icon={<CreditCard size={20}/>} label="PAYMENTS" onClick={() => setActiveTab("payments")} />
+            <Tile icon={<Layout size={20}/>} label="BOT UI" onClick={() => setActiveTab("bot ui")} />
+            <Tile icon={<Globe size={20}/>} label="SYSTEM" onClick={() => setActiveTab("system")} />
+          </div>
+        </main>
 
-        <button 
-          onClick={() => {
-            localStorage.removeItem("adminCode");
-            setIsAuthorized(false);
-          }}
-          className="mt-16 text-[9px] text-red-500 font-primary-heading flex items-center gap-2 tracking-[0.2em] hover:opacity-70 transition-opacity"
-        >
-          <LogOut size={12} /> TERMINATE SESSION
-        </button>
+        {/* Fixed Footer */}
+        <footer className="fixed bottom-0 left-0 right-0 h-12 flex items-center justify-center bg-white border-t border-accent">
+          <p className="text-[10px] text-text-secondary tracking-widest uppercase">SYSTEM DESIGNED & DEVELOPED BY JEROME BALANCAR</p>
+        </footer>
       </div>
     );
   }
