@@ -35,9 +35,9 @@ function createMatrixButtons(options: { label: string, data: string }[], nav: { 
     inline_keyboard.push(row);
   }
   inline_keyboard.push([
-    { text: pad("<< PREV"), callback_data: nav.prev },
+    { text: pad("<<"), callback_data: nav.prev },
     { text: pad("MAIN MENU"), callback_data: "action:main_menu" },
-    { text: pad("NEXT >>"), callback_data: nav.next }
+    { text: pad(">>"), callback_data: nav.next }
   ]);
   return { inline_keyboard };
 }
